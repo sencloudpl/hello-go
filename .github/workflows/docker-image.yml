@@ -7,8 +7,52 @@ on:
     branches: [ "master" ]
 
 jobs:
+  golangci:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+          cache: false
+      - name: golangci-lint
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEPLOYMENT_GITHUB_TOKEN }}
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+          # Optional: golangci-lint command line arguments.
+          #
+          # Note: By default, the `.golangci.yml` file should be at the root of the repository.
+          # The location of the configuration file can be changed by using `--config=`
+          # args: --timeout=30m --config=/my/path/.golangci.yml --issues-exit-code=0 
+          only-new-issues: true
+          install-mode: "goinstall"
 
-  build:
+      - name: Create GitHub issues for linting errors
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const issues = ${{ toJson(steps.golangci.outputs.issues) }}
+            const octokit = require('@octokit/rest')();
+            octokit.authenticate({
+              type: 'token',
+              token: process.env.GITHUB_TOKEN,
+            });
+
+            for (const issue of issues) {
+              octokit.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: `Linting Issue: ${issue.linter}`,
+                body: `File: ${issue.file}\nLine: ${issue.line}\nMessage: ${issue.text}\n`,
+              });
+            }
+
+  build: 
+  
+  
 
     runs-on: ubuntu-latest
 
