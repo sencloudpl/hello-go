@@ -1,6 +1,11 @@
 name: CI
 on:
   workflow_dispatch:
+    inputs:
+      releaseType:
+        description: "Merge to Staging yes/no? "
+        required: true
+        default: 'no'
 
 jobs:
   build:
