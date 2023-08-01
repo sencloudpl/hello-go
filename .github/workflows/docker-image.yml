@@ -1,19 +1,33 @@
-name: Docker Image CI
+name: CI
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
-    
+    branches:
+      - master
+
+# Define a custom event for manual approval
 workflow_dispatch:
+
 jobs:
-  build: 
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Build the Docker image
+      # Add your build and test steps here
+      - name: Checkout code
         uses: actions/checkout@v3
-        run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
-         # Manual approval step
+
+      # Add your build and test steps here
+
+  merge-to-staging:
+    needs: build
+    runs-on: ubuntu-latest
+    if: ${{ needs.build.result == 'success' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Other steps in the merge-to-staging job
+
+      # Manual approval step
       - name: Manual approval
         if: github.event_name == 'workflow_dispatch'
         run: |
@@ -25,7 +39,14 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         continue-on-error: true
         run: |
-           echo "Waiting for manual approval..."
-            sleep 10s
+          echo "Waiting for manual approval..."
+          sleep 10s
           # Add a loop here to check if the pull request has been approved
           # You can use GitHub API or any other mechanism to check for approval
+
+      # Continue with the merge only after manual approval
+      - name: Merge to staging
+        if: success() && needs.merge-to-staging.outputs.approved == 'true'
+        run: |
+          # Perform the merge to staging
+          echo "Merging to staging..."
