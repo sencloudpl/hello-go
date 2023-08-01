@@ -4,8 +4,7 @@ on:
     branches:
       - master
 
-# Define a custom event for manual approval
-workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   build:
