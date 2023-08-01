@@ -5,7 +5,7 @@ on:
       releaseType:
         description: "Merge to Staging yes/no? "
         required: true
-        default: 'no'
+        default: 'build'
 
 jobs:
   build:
