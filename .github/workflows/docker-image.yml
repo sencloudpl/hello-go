@@ -1,14 +1,9 @@
 name: CI
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - master
   workflow_dispatch:
-    inputs:
-      releaseType:
-        description: 'Merge to Staging (build or merge-to-staging )?'
-        required: true
-        default: 'build'
-
 jobs:
   build:
     runs-on: ubuntu-latest
