@@ -5,45 +5,19 @@ on:
       - master
   workflow_dispatch:
 jobs:
-  build:
+  build-and-publish:
     runs-on: ubuntu-latest
     steps:
-      # Add your build and test steps here
-      - name: Checkout code
-        uses: actions/checkout@v3
 
-      # Add your build and test steps here
-
-  merge-to-staging:
-    needs: build
-    runs-on: ubuntu-latest
-    if: ${{ needs.build.result == 'success' }}
+  deploy-dev:
+    runs-on: 'ubuntu-latest'
+    environment: 'Development'
+    needs: build-and-publish
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
 
-      # Other steps in the merge-to-staging job
+  deploy-prod:
+    runs-on: 'ubuntu-latest'
+    environment: 'Staging'
+    needs: [build-and-publish, deploy-dev]
+    steps:
 
-      # Manual approval step
-      - name: Manual approval
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "Manually approve the merge to staging"
-          # Add any other instructions or prompts for the approver
-
-      # Wait for manual approval
-      - name: Wait for approval
-        if: github.event_name == 'workflow_dispatch'
-        continue-on-error: true
-        run: |
-          echo "Waiting for manual approval..."
-          sleep 10s
-          # Add a loop here to check if the pull request has been approved
-          # You can use GitHub API or any other mechanism to check for approval
-
-      # Continue with the merge only after manual approval
-      - name: Merge to staging
-        if: success() && needs.merge-to-staging.outputs.approved == 'true'
-        run: |
-          # Perform the merge to staging
-          echo "Merging to staging..."
