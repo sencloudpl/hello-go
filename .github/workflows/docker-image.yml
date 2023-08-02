@@ -11,13 +11,13 @@ jobs:
 
   deploy-dev:
     runs-on: 'ubuntu-latest'
-    environment: 'Development'
+    environment: 'Developement'
     needs: build-and-publish
     steps:
 
   deploy-prod:
     runs-on: 'ubuntu-latest'
-    environment: 'Staging'
+    environment: 'Production'
     needs: [build-and-publish, deploy-dev]
     steps:
 
