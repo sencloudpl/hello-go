@@ -1,75 +1,17 @@
-name: CI/CD
+name: Build Docker Image
 
 on:
   push:
     branches:
-      - master
-
-# Define a custom event for manual approval
-workflow_dispatch:
+      - main
 
 jobs:
-  tag-parsing:
+  build-image:
     runs-on: ubuntu-latest
-    name: Parse tag and branch for docker
-    outputs:
-      image_registry: ${{ steps.output_values.outputs.image_registry }}
-      update_tag: ${{ steps.output_values.outputs.update_tag }}
-      should_publish: ${{ steps.output_values.outputs.should_publish }}
-      should_deploy: ${{ steps.output_values.outputs.should_deploy }}
-      deployment_environment: ${{ steps.output_values.outputs.deployment_environment }}
-    steps:
-      # Add your tag-parsing steps here
 
-  build-and-publish:
-    runs-on: ubuntu-latest
-    name: Publish to artifact registry
-    if: ${{ needs.tag-parsing.outputs.should_publish }} == "true"
-    needs:
-      - tag-parsing
-    steps:
-      # Add your build and publish steps here
-
-  call-dispatch-event:
-    runs-on: ubuntu-latest
-    name: Call dispatch event
-    needs:
-      - tag-parsing
-      - build-and-publish
-    steps:
-      # Add your call-dispatch-event steps here
-
-  staging-approval:
-    runs-on: ubuntu-latest
-    needs:
-      - tag-parsing
-      - build-and-publish
-      - call-dispatch-event
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
 
-      - name: Ask for staging deployment approval
-        if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-        run: |
-          echo "Do you want to deploy to staging environment? (YES/NO)"
-          read -r confirmation
-
-          if [[ $confirmation == "YES" ]]; then
-            echo "Staging deployment is approved."
-            echo "Proceeding with the deployment..."
-            echo "approved=YES" >> $GITHUB_ENV
-          else
-            echo "Staging deployment is not approved."
-            echo "Skipping the staging deployment..."
-            echo "approved=NO" >> $GITHUB_ENV
-          fi
-
-      - name: Merge master into staging
-        if: ${{ env.approved == 'YES' }}
-        run: |
-          # Assuming your staging branch is named 'staging'
-          git checkout staging
-          git merge master
-          # Optionally, you can push the changes to the remote staging branch here
-          git push origin staging
+      - name: Build Docker image
+        run: docker build -t my-docker-image:latest .
